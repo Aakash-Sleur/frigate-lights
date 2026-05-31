@@ -1,12 +1,26 @@
 <script setup lang="ts">
 import type { App } from '~/types/uptime'
 
-const { apps, updateStatus, addApp, deleteApp } = useApps()
+const { apps, updateStatus, addApp, deleteApp, updateApp } = useApps()
 const { isAuthenticated, logout } = useAuth()
 
 const selectedApp = ref<App | null>(null)
 const isAppModalOpen = ref(false)
 const isLoginOpen = ref(false)
+
+// ── Edit modal ────────────────────────────────────────────
+const isServiceFormOpen = ref(false)
+const editingApp = ref<App | null>(null)
+
+const openEditModal = (app: App) => {
+  editingApp.value = app
+  isServiceFormOpen.value = true
+}
+
+const openCreateModal = () => {
+  editingApp.value = null
+  isServiceFormOpen.value = true
+}
 
 // ── Filter ────────────────────────────────────────────────
 type StatusFilter = 'all' | 'up' | 'down' | 'maintenance'
@@ -98,11 +112,13 @@ const dockAction = computed(() => {
   return { label: 'Mark as Up', color: 'green' as const, icon: 'i-heroicons-arrow-trending-up' }
 })
 
-// ── Create / delete ───────────────────────────────────────
-const isServiceFormOpen = ref(false)
-
+// ── Create / update / delete ──────────────────────────────
 const handleAddService = (data: Omit<App, 'id' | 'maintenanceSchedules'>) => {
   addApp(data)
+}
+
+const handleUpdateService = (id: number, data: Partial<App>) => {
+  updateApp(id, data)
 }
 
 const handleDeleteSelected = () => {
@@ -206,7 +222,7 @@ const handleDeleteApp = (app: App) => {
               variant="solid"
               size="sm"
               icon="i-heroicons-plus"
-              @click="isServiceFormOpen = true"
+              @click="openCreateModal"
             >
               Add Service
             </UButton>
@@ -226,6 +242,7 @@ const handleDeleteApp = (app: App) => {
           :admin-mode="isAuthenticated"
           @view="openModal"
           @select="toggleSelect"
+          @edit="openEditModal"
           @delete="handleDeleteApp"
         />
       </div>
@@ -302,7 +319,7 @@ const handleDeleteApp = (app: App) => {
 
           <!-- Actions -->
           <div class="flex items-center gap-2 shrink-0">
-            <template v-if="selectedApps.length === 1 && dockAction">
+            <template v-if="selectedApps.length === 1 && dockAction && isAuthenticated">
               <UButton
                 :color="dockAction.color"
                 variant="soft"
@@ -363,7 +380,9 @@ const handleDeleteApp = (app: App) => {
     <!-- Service Form Modal -->
     <ServiceFormModal
       v-model:open="isServiceFormOpen"
+      :app="editingApp"
       @submit="handleAddService"
+      @update="handleUpdateService"
     />
 
     <!-- Login Modal -->

@@ -15,5 +15,10 @@ export default defineNuxtConfig({
      * @default `~/server/uploadthing.ts`
      */
     routerPath: "",
+  },
+  runtimeConfig: {
+    public: {
+      adminPassword: process.env.ADMIN_PASSWORD || 'admin123'
+    }
   }
 })

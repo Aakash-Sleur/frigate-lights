@@ -7,11 +7,17 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "mongodb:setup": "node scripts/setup-mongodb.js",
+    "mongodb:start": "docker-compose up -d mongodb",
+    "mongodb:stop": "docker-compose stop mongodb",
+    "mongodb:seed": "curl -X POST http://localhost:3000/api/seed",
+    "admin:password": "node scripts/set-admin-password.js"
   },
   "dependencies": {
     "@nuxt/ui": "^4.8.0",
     "@uploadthing/nuxt": "^7.1.10",
+    "mongodb": "^7.2.0",
     "nuxt": "^4.4.6",
     "tailwindcss": "^4.3.0",
     "uploadthing": "^7.7.4",

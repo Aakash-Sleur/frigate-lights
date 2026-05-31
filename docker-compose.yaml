@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    volumes:
+      - sqlite_data:/app/data
+    depends_on:
+      - redis
+      - mongodb
+
+  redis:
+    image: redis:8
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mongodb:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  sqlite_data
+  redis_data
+  mongodb_data

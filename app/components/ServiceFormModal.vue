@@ -3,17 +3,21 @@ import type { App } from '~/types/uptime'
 
 const props = defineProps<{
   open: boolean
+  app?: App | null
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
   submit: [data: Omit<App, 'id' | 'maintenanceSchedules'>]
+  update: [id: number, data: Partial<App>]
 }>()
 
 const isOpen = computed({
   get: () => props.open,
   set: (val) => emit('update:open', val)
 })
+
+const isEditMode = computed(() => !!props.app)
 
 // ── Form state ────────────────────────────────────────────
 const defaultForm = () => ({
@@ -51,15 +55,32 @@ function validate() {
   return Object.keys(errors).length === 0
 }
 
-// ── Reset on open ─────────────────────────────────────────
+// ── Reset/populate on open ────────────────────────────────
 watch(() => props.open, (val) => {
-  if (val) Object.assign(form, defaultForm())
+  if (val) {
+    if (props.app) {
+      // Edit mode - populate with existing data
+      Object.assign(form, {
+        name: props.app.name,
+        description: props.app.description,
+        url: props.app.url,
+        logo: props.app.logo,
+        logoType: props.app.logoType,
+        status: props.app.status,
+        image: props.app.image,
+      })
+    } else {
+      // Create mode - reset to defaults
+      Object.assign(form, defaultForm())
+    }
+  }
 })
 
 // ── Submit ────────────────────────────────────────────────
 function handleSubmit() {
   if (!validate()) return
-  emit('submit', {
+  
+  const data = {
     name: form.name.trim(),
     description: form.description.trim(),
     url: form.url.trim(),
@@ -67,7 +88,14 @@ function handleSubmit() {
     logoType: form.logoType,
     status: form.status,
     image: form.image.trim() || `https://placehold.co/600x400/6366f1/white?text=${encodeURIComponent(form.name.trim())}`,
-  })
+  }
+  
+  if (isEditMode.value && props.app) {
+    emit('update', props.app.id, data)
+  } else {
+    emit('submit', data)
+  }
+  
   isOpen.value = false
 }
 </script>
@@ -81,11 +109,15 @@ function handleSubmit() {
       <div class="px-6 py-5 flex items-center justify-between w-full">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
-            <UIcon name="i-heroicons-plus-circle" class="w-5 h-5 text-primary-600" />
+            <UIcon :name="isEditMode ? 'i-heroicons-pencil-square' : 'i-heroicons-plus-circle'" class="w-5 h-5 text-primary-600" />
           </div>
           <div>
-            <h3 class="font-bold text-gray-900 text-base leading-tight">Add Service</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Register a new monitored application</p>
+            <h3 class="font-bold text-gray-900 text-base leading-tight">
+              {{ isEditMode ? 'Edit Service' : 'Add Service' }}
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">
+              {{ isEditMode ? 'Update service information' : 'Register a new monitored application' }}
+            </p>
           </div>
         </div>
         <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" size="sm" class="rounded-xl" @click="isOpen = false" />
@@ -173,7 +205,7 @@ function handleSubmit() {
         <!-- Initial status -->
         <div class="space-y-1.5">
           <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Initial Status
+            {{ isEditMode ? 'Status' : 'Initial Status' }}
           </label>
           <USelect
             v-model="form.status"
@@ -189,8 +221,14 @@ function handleSubmit() {
           <UButton color="neutral" variant="ghost" size="sm" @click="isOpen = false">
             Cancel
           </UButton>
-          <UButton color="primary" variant="solid" size="sm" icon="i-heroicons-plus" type="submit">
-            Add Service
+          <UButton 
+            color="primary" 
+            variant="solid" 
+            size="sm" 
+            :icon="isEditMode ? 'i-heroicons-check' : 'i-heroicons-plus'" 
+            type="submit"
+          >
+            {{ isEditMode ? 'Save Changes' : 'Add Service' }}
           </UButton>
         </div>
 

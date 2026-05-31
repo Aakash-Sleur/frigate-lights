@@ -12,6 +12,7 @@ const emit = defineEmits<{
   view: [app: App];
   select: [app: App];
   delete: [app: App];
+  edit: [app: App];
 }>();
 </script>
 
@@ -103,11 +104,29 @@ const emit = defineEmits<{
 
           <div class="flex items-center gap-1.5">
             <UButton
+              color="gray"
+              size="sm"
+              variant="ghost"
+              icon="i-heroicons-arrow-top-right-on-square"
+              title="Open site"
+              @click.stop="navigateTo(app.url, { open: { target: '_blank' } })"
+            />
+            <UButton
+              v-if="adminMode"
+              color="blue"
+              size="sm"
+              variant="ghost"
+              icon="i-heroicons-pencil-square"
+              title="Edit service"
+              @click.stop="emit('edit', app)"
+            />
+            <UButton
               v-if="adminMode"
               color="red"
               size="sm"
               variant="ghost"
               icon="i-heroicons-trash"
+              title="Delete service"
               @click.stop="emit('delete', app)"
             />
             <UButton

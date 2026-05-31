@@ -1,9 +1,29 @@
 <script setup lang="ts">
+import type { App } from '~/types/uptime'
 import { statusConfig } from '~/types/uptime'
 
 definePageMeta({ layout: 'admin', middleware: 'auth' })
 
-const { apps } = useApps()
+const { apps, updateApp, deleteApp } = useApps()
+
+// ── Edit modal ────────────────────────────────────────────
+const isServiceFormOpen = ref(false)
+const editingApp = ref<App | null>(null)
+
+const openEditModal = (app: App) => {
+  editingApp.value = app
+  isServiceFormOpen.value = true
+}
+
+const handleUpdateService = (id: number, data: Partial<App>) => {
+  updateApp(id, data)
+}
+
+const handleDeleteApp = (app: App) => {
+  if (confirm(`Are you sure you want to delete "${app.name}"?`)) {
+    deleteApp(app.id)
+  }
+}
 
 // ── Summary stats ─────────────────────────────────────────
 const totalApps      = computed(() => apps.value.length)
@@ -247,6 +267,24 @@ const barSegments = computed(() => [
             <UIcon :name="statusConfig[app.status].icon" class="w-3 h-3 mr-1" />
             {{ statusConfig[app.status].label }}
           </UBadge>
+          <div class="flex items-center gap-1 shrink-0">
+            <UButton
+              color="blue"
+              size="xs"
+              variant="ghost"
+              icon="i-heroicons-pencil-square"
+              title="Edit service"
+              @click="openEditModal(app)"
+            />
+            <UButton
+              color="red"
+              size="xs"
+              variant="ghost"
+              icon="i-heroicons-trash"
+              title="Delete service"
+              @click="handleDeleteApp(app)"
+            />
+          </div>
         </div>
       </div>
     </div>
